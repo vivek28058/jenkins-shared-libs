@@ -8,8 +8,15 @@ def run_command(command, shell=True):
     if result.returncode != 0:
         raise Exception(f"Command failed: {command}")
 
-def security_scan(docker_username, docker_password, image_name, report_dir="reports"):
+def security_scan(image_name, report_dir="reports"):
     print("🔐 Stage: Security Scan")
+
+    # Read Docker credentials from environment
+    docker_username = os.getenv('DOCKER_USERNAME')
+    docker_password = os.getenv('DOCKER_PASSWORD')
+
+    if not docker_username or not docker_password:
+        raise EnvironmentError("Missing Docker credentials in environment variables.")
 
     # Docker login
     run_command(f"docker login -u {docker_username} -p {docker_password}")
@@ -41,5 +48,12 @@ def security_scan(docker_username, docker_password, image_name, report_dir="repo
 
     print("✅ Security scan completed.")
 
-# Example usage:
-# security_scan("your-docker-username", "your-docker-password", "your-image-name")
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) < 2:
+        print("Usage: python security_scan.py <image_name> [report_dir]")
+        sys.exit(1)
+    
+    image_name = sys.argv[1]
+    report_dir = sys.argv[2] if len(sys.argv) > 2 else "reports"
+    security_scan(image_name, report_dir)
